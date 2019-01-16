@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
-import { Subscription } from 'rxjs';
+import { Subscription, pipe } from 'rxjs';
 
 import { Product } from '../product';
 import { ProductService } from '../product.service';
-import { Store } from '@ngrx/store';
+import { Store, select } from '@ngrx/store';
 
 @Component({
   selector: 'pm-product-list',
@@ -22,8 +22,9 @@ export class ProductListComponent implements OnInit, OnDestroy {
   // Used to highlight the selected product in the list
   selectedProduct: Product | null;
   sub: Subscription;
+  sub2: Subscription;
 
-  constructor(private productService: ProductService,private store:Store<any>) { }
+  constructor(private productService: ProductService, private store: Store<any>) { }
 
   ngOnInit(): void {
     this.sub = this.productService.selectedProductChanges$.subscribe(
@@ -34,16 +35,25 @@ export class ProductListComponent implements OnInit, OnDestroy {
       (products: Product[]) => this.products = products,
       (err: any) => this.errorMessage = err.error
     );
+
+    this.sub2 = this.store.select('products').subscribe(
+      products => {
+        if (products) {
+          this.displayCode = products.showProductCode;
+        }
+      });
   }
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    this.sub2.unsubscribe();
+
   }
 
   checkChanged(value: boolean): void {
     this.store.dispatch({
       type: 'TOGGLE_PRODUCT_CODE',
-      payload: value 
+      payload: value
     })
   }
 
